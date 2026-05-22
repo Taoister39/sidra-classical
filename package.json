@@ -2,7 +2,7 @@
   "name": "sidra",
   "productName": "Sidra",
   "version": "0.3.3",
-  "description": "An elegant Apple Music desktop client for Linux, macOS and Windows. No frippery, just quality. A better class of Cider 🍎",
+  "description": "An elegant Apple Music Classical desktop client for Linux, macOS and Windows.",
   "main": "dist/main.js",
   "scripts": {
     "start": "npm run build && electron .",
@@ -79,21 +79,8 @@
         "snap"
       ],
       "category": "Audio",
-      "executableName": "sidra",
-      "desktop": {
-        "entry": {
-          "MimeType": "x-scheme-handler/itms;"
-        }
-      }
+      "executableName": "sidra"
     },
-    "protocols": [
-      {
-        "name": "Apple Music URL",
-        "schemes": [
-          "itms"
-        ]
-      }
-    ],
     "appImage": {
       "artifactName": "${productName}-${os}-${arch}.${ext}"
     },
@@ -108,7 +95,7 @@
       "confinement": "strict",
       "grade": "stable",
       "base": "core22",
-      "summary": "An elegant Apple Music desktop client",
+      "summary": "An elegant Apple Music Classical desktop client",
       "plugs": [
         "default",
         "removable-media",

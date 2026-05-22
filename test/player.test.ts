@@ -351,20 +351,20 @@ describe('Channel contract', () => {
 
 describe('getShareUrl', () => {
   it('returns payload.url when present', () => {
-    expect(getShareUrl({ url: 'https://music.apple.com/album/123?i=456' })).toBe(
-      'https://music.apple.com/album/123?i=456',
+    expect(getShareUrl({ url: 'https://classical.music.apple.com/album/123?i=456' })).toBe(
+      'https://classical.music.apple.com/album/123?i=456',
     );
   });
 
   it('returns catalogId URL when payload.url is absent', () => {
     expect(getShareUrl({ playParams: { catalogId: '999' } })).toBe(
-      'https://music.apple.com/song/999',
+      'https://classical.music.apple.com/song/999',
     );
   });
 
   it('returns globalId URL when both payload.url and catalogId are absent', () => {
     expect(getShareUrl({ playParams: { globalId: 'abc' } })).toBe(
-      'https://music.apple.com/song/abc',
+      'https://classical.music.apple.com/song/abc',
     );
   });
 
@@ -376,7 +376,7 @@ describe('getShareUrl', () => {
 
   it('prefers catalogId over globalId', () => {
     expect(getShareUrl({ playParams: { catalogId: '1', globalId: '2' } })).toBe(
-      'https://music.apple.com/song/1',
+      'https://classical.music.apple.com/song/1',
     );
   });
 

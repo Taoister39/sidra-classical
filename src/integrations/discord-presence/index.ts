@@ -116,7 +116,7 @@ function sendActivity(): void {
     { label: 'Sidra', url: 'https://github.com/wimpysworld/sidra' },
   ];
   if (trackUrl) {
-    buttons.push({ label: 'Play on Apple Music', url: trackUrl });
+    buttons.push({ label: 'Play on Apple Music Classical', url: trackUrl });
   }
 
   const activity: Record<string, unknown> = {

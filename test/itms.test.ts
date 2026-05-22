@@ -13,40 +13,40 @@ const mockedGetLocaleStorefront = vi.mocked(getLocaleStorefront);
 
 describe('transformItmsUrl', () => {
   it('rebuilds catalogue album URL as https and strips app=music', () => {
-    const result = transformItmsUrl('itms://music.apple.com/gb/album/foo/123?app=music');
-    expect(result).toEqual({ kind: 'url', url: 'https://music.apple.com/gb/album/foo/123' });
+    const result = transformItmsUrl('itms://classical.music.apple.com/gb/album/foo/123?app=music');
+    expect(result).toEqual({ kind: 'url', url: 'https://classical.music.apple.com/gb/album/foo/123' });
   });
 
   it('preserves other query params while stripping app=music', () => {
-    const result = transformItmsUrl('itms://music.apple.com/gb/album/foo/123?i=789&app=music');
-    expect(result).toEqual({ kind: 'url', url: 'https://music.apple.com/gb/album/foo/123?i=789' });
+    const result = transformItmsUrl('itms://classical.music.apple.com/gb/album/foo/123?i=789&app=music');
+    expect(result).toEqual({ kind: 'url', url: 'https://classical.music.apple.com/gb/album/foo/123?i=789' });
   });
 
   it.each<[string, ItmsRouteToken]>([
+    ['home', 'home'],
     ['library', 'library'],
     ['browse', 'browse'],
-    ['radio', 'radio'],
-    ['listenNow', 'listenNow'],
-    ['subscribe', 'subscribe'],
+    ['playlists', 'playlists'],
+    ['search', 'search'],
   ])('parses deeplink ?p=%s into route token', (param, token) => {
-    const result = transformItmsUrl(`itms://music.apple.com/deeplink?p=${param}`);
+    const result = transformItmsUrl(`itms://classical.music.apple.com/deeplink?p=${param}`);
     expect(result).toEqual({ kind: 'route', token });
   });
 
   it('returns null for deeplink with unknown token', () => {
-    expect(transformItmsUrl('itms://music.apple.com/deeplink?p=bogus')).toBeNull();
+    expect(transformItmsUrl('itms://classical.music.apple.com/deeplink?p=bogus')).toBeNull();
   });
 
   it('returns null for deeplink with no p parameter', () => {
-    expect(transformItmsUrl('itms://music.apple.com/deeplink')).toBeNull();
+    expect(transformItmsUrl('itms://classical.music.apple.com/deeplink')).toBeNull();
   });
 
   it('rejects itmss:// scheme', () => {
-    expect(transformItmsUrl('itmss://music.apple.com/gb/album/foo/123')).toBeNull();
+    expect(transformItmsUrl('itmss://classical.music.apple.com/gb/album/foo/123')).toBeNull();
   });
 
   it('rejects https:// scheme', () => {
-    expect(transformItmsUrl('https://music.apple.com/gb/album/foo/123')).toBeNull();
+    expect(transformItmsUrl('https://classical.music.apple.com/gb/album/foo/123')).toBeNull();
   });
 
   it('rejects javascript: scheme', () => {
@@ -65,8 +65,8 @@ describe('transformItmsUrl', () => {
     expect(transformItmsUrl('itms://evil.example.com/gb/album/foo/123')).toBeNull();
   });
 
-  it('rejects subdomain of music.apple.com', () => {
-    expect(transformItmsUrl('itms://attacker.music.apple.com/gb/album/foo/123')).toBeNull();
+  it('rejects subdomain of classical.music.apple.com', () => {
+    expect(transformItmsUrl('itms://attacker.classical.music.apple.com/gb/album/foo/123')).toBeNull();
   });
 
   it('returns null for malformed input', () => {
@@ -80,16 +80,16 @@ describe('transformItmsUrl', () => {
 
 describe('extractItmsUrlFromArgv', () => {
   it('returns the parsed target when itms URL is the last argv element', () => {
-    const argv = ['/usr/bin/sidra', '--enable-features=Foo', 'itms://music.apple.com/gb/album/foo/123?app=music'];
+    const argv = ['/usr/bin/sidra', '--enable-features=Foo', 'itms://classical.music.apple.com/gb/album/foo/123?app=music'];
     expect(extractItmsUrlFromArgv(argv)).toEqual({
       kind: 'url',
-      url: 'https://music.apple.com/gb/album/foo/123',
+      url: 'https://classical.music.apple.com/gb/album/foo/123',
     });
   });
 
   it('returns the parsed target when itms URL is in the middle of argv', () => {
-    const argv = ['/usr/bin/sidra', 'itms://music.apple.com/deeplink?p=radio', '--some-flag'];
-    expect(extractItmsUrlFromArgv(argv)).toEqual({ kind: 'route', token: 'radio' });
+    const argv = ['/usr/bin/sidra', 'itms://classical.music.apple.com/deeplink?p=search', '--some-flag'];
+    expect(extractItmsUrlFromArgv(argv)).toEqual({ kind: 'route', token: 'search' });
   });
 
   it('returns null when argv contains no itms URL', () => {
@@ -105,8 +105,8 @@ describe('extractItmsUrlFromArgv', () => {
   it('returns the first valid itms URL when multiple are present', () => {
     const argv = [
       '/usr/bin/sidra',
-      'itms://music.apple.com/deeplink?p=library',
-      'itms://music.apple.com/gb/album/foo/123?app=music',
+      'itms://classical.music.apple.com/deeplink?p=library',
+      'itms://classical.music.apple.com/gb/album/foo/123?app=music',
     ];
     expect(extractItmsUrlFromArgv(argv)).toEqual({ kind: 'route', token: 'library' });
   });
@@ -115,7 +115,7 @@ describe('extractItmsUrlFromArgv', () => {
     const argv = [
       '/usr/bin/sidra',
       'itms://evil.example.com/foo',
-      'itms://music.apple.com/deeplink?p=browse',
+      'itms://classical.music.apple.com/deeplink?p=browse',
     ];
     expect(extractItmsUrlFromArgv(argv)).toEqual({ kind: 'route', token: 'browse' });
   });
@@ -130,23 +130,23 @@ describe('buildItmsRouteURL', () => {
   });
 
   it.each<[ItmsRouteToken, string]>([
-    ['library', 'https://music.apple.com/gb/library'],
-    ['browse', 'https://music.apple.com/gb/browse'],
-    ['radio', 'https://music.apple.com/gb/radio'],
-    ['listenNow', 'https://music.apple.com/gb/listen-now'],
-    ['subscribe', 'https://music.apple.com/gb/subscribe'],
+    ['home', 'https://classical.music.apple.com/gb'],
+    ['library', 'https://classical.music.apple.com/gb/library'],
+    ['browse', 'https://classical.music.apple.com/gb/browse'],
+    ['playlists', 'https://classical.music.apple.com/gb/browse/playlists'],
+    ['search', 'https://classical.music.apple.com/gb/search'],
   ])('maps token %s to %s with persisted storefront gb', (token, expected) => {
     expect(buildItmsRouteURL(token)).toBe(expected);
   });
 
   it('appends ?l= when language is set', () => {
     mockedGetLanguage.mockReturnValue('en-GB');
-    expect(buildItmsRouteURL('library')).toBe('https://music.apple.com/gb/library?l=en-GB');
+    expect(buildItmsRouteURL('library')).toBe('https://classical.music.apple.com/gb/library?l=en-GB');
   });
 
   it('falls back to getLocaleStorefront when no persisted storefront', () => {
     mockedGetStorefront.mockReturnValue(undefined);
     mockedGetLocaleStorefront.mockReturnValue('de');
-    expect(buildItmsRouteURL('browse')).toBe('https://music.apple.com/de/browse');
+    expect(buildItmsRouteURL('browse')).toBe('https://classical.music.apple.com/de/browse');
   });
 });

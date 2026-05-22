@@ -3,6 +3,9 @@ import type { ThemeName } from './theme';
 
 const configLog = log.scope('config');
 
+export type StartPage = 'home' | 'browse' | 'library' | 'playlists' | 'search' | 'last';
+type LegacyStartPage = 'new' | 'radio' | 'all-playlists';
+
 interface StoreSchema {
   storefront: string;
   language: string | null;
@@ -10,7 +13,7 @@ interface StoreSchema {
   'discord.enabled': boolean;
   theme: ThemeName;
   'autoUpdate.enabled': boolean;
-  startPage: 'home' | 'new' | 'radio' | 'all-playlists' | 'last';
+  startPage: StartPage | LegacyStartPage;
   lastPageUrl: string;
   zoomFactor: number;
 }
@@ -92,11 +95,22 @@ export function setLastPageUrl(url: string): void {
   configLog.info('lastPageUrl set:', url);
 }
 
-export function getStartPage(): 'home' | 'new' | 'radio' | 'all-playlists' | 'last' {
-  return getConfigValue('startPage', 'new');
+const START_PAGES = new Set<StartPage>(['home', 'browse', 'library', 'playlists', 'search', 'last']);
+const LEGACY_START_PAGE_MAP: Record<LegacyStartPage, StartPage> = {
+  'new': 'home',
+  'radio': 'browse',
+  'all-playlists': 'playlists',
+};
+
+export function getStartPage(): StartPage {
+  const value = getConfigValue('startPage', 'home');
+  if (START_PAGES.has(value as StartPage)) {
+    return value as StartPage;
+  }
+  return LEGACY_START_PAGE_MAP[value as LegacyStartPage] ?? 'home';
 }
 
-export function setStartPage(page: 'home' | 'new' | 'radio' | 'all-playlists' | 'last'): void {
+export function setStartPage(page: StartPage): void {
   store.set('startPage', page);
   configLog.info('startPage set:', page);
 }

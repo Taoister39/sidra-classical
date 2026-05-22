@@ -11,7 +11,7 @@ vi.mock('../src/i18n', () => ({
 
 vi.mock('../src/paths', () => ({
   getAssetPath: vi.fn((...parts: string[]) => parts.join('/')),
-  getProductInfo: () => ({ productName: 'Sidra', description: 'Apple Music client', author: 'Test', license: 'MIT' }),
+  getProductInfo: () => ({ productName: 'Sidra', description: 'Apple Music Classical client', author: 'Test', license: 'MIT' }),
 }));
 
 import { BrowserWindow, app } from 'electron';
@@ -118,7 +118,7 @@ describe('showAboutWindow', () => {
       query: {
         name: 'Sidra',
         version: app.getVersion(),
-        description: 'Apple Music client',
+        description: 'Apple Music Classical client',
         author: 'Test',
         license: 'MIT',
         about: 'About Sidra',

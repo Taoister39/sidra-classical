@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { BrowserWindow } from 'electron';
 import log from 'electron-log/main';
+import { APPLE_MUSIC_CLASSICAL_ORIGIN } from './musicService';
 
 const playerLog = log.scope('player');
 
@@ -38,15 +39,15 @@ export interface NowPlayingPayload {
 }
 
 /**
- * Derives a shareable Apple Music URL from the payload, falling back to
+ * Derives a shareable Apple Music Classical URL from the payload, falling back to
  * playParams.catalogId or playParams.globalId when payload.url is absent.
  */
 export function getShareUrl(payload: NowPlayingPayload): string | undefined {
   if (payload.url) return payload.url;
   const catalogId = payload.playParams?.catalogId;
-  if (catalogId) return `https://music.apple.com/song/${catalogId}`;
+  if (catalogId) return `${APPLE_MUSIC_CLASSICAL_ORIGIN}/song/${catalogId}`;
   const globalId = payload.playParams?.globalId;
-  if (globalId) return `https://music.apple.com/song/${globalId}`;
+  if (globalId) return `${APPLE_MUSIC_CLASSICAL_ORIGIN}/song/${globalId}`;
   return undefined;
 }
 

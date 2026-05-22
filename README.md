@@ -4,14 +4,14 @@
   Sidra
 </h1>
 
-<p align="center"><b>An elegant Apple Music desktop client for Linux, macOS and Windows. No frippery, just quality. A better class of Cider 🍎</b></p>
+<p align="center"><b>An elegant Apple Music Classical desktop client for Linux, macOS and Windows.</b></p>
 
 <p align="center">Made with 💝 for 🐧🍏🪟</p>
 
-Sidra is Apple Music as a proper desktop citizen on Linux, macOS, and Windows - wired into each platform's native media subsystem, not bolted on top.
+Sidra is Apple Music Classical as a proper desktop citizen on Linux, macOS, and Windows - wired into each platform's native media subsystem, not bolted on top.
 
 Most Apple Music desktop clients break the audio, mangle the playback controls, or bury you under a custom UI that Apple never signed off on - the problem is worst on Linux.
-Sidra takes the opposite approach: wrap `music.apple.com` directly, stay out of the way, and let the audio through untouched. Apple owns the interface and keeps it current; Sidra inherits every improvement automatically.
+Sidra takes the opposite approach: wrap `classical.music.apple.com` directly, stay out of the way, and let the audio through untouched. Apple owns the interface and keeps it current; Sidra inherits every improvement automatically.
 
 ---
 
@@ -123,11 +123,11 @@ SmartScreen will warn the installer is unsigned. Click **More info** then **Run 
 
 ## How It Works
 
-Sidra loads `music.apple.com` directly inside CastLabs Electron (required for Widevine DRM on Linux - no other shell supports this).
+Sidra loads `classical.music.apple.com` directly inside CastLabs Electron (required for Widevine DRM on Linux - no other shell supports this).
 A lightweight hook script is injected after page load that taps `MusicKit.getInstance()` events and forwards them over Electron IPC to the main process, which distributes them to platform integrations.
 
 ```
-music.apple.com
+classical.music.apple.com
   └── MusicKit.js events
         └── musicKitHook.js (injected)
               └── IPC → player.ts (EventEmitter)
@@ -155,13 +155,13 @@ Reliability followed the same arc. Authentication reported failure after succeed
 
 I wanted something that just worked. So, I made Sidra.
 
-**Linux came first.** Every existing Apple Music client either lacks MPRIS, implements it badly, or wrecks the audio in the process. Media keys should work. Desktop notifications should fire. Volume should track. None of that is exotic, and none of it should require a custom audio engine.
+**Linux came first.** Every existing Apple Music client either lacks MPRIS, implements it badly, or wrecks the audio in the process. Apple Music Classical deserves the same desktop treatment: media keys should work, desktop notifications should fire, and volume should track.
 
 **macOS followed, for two reasons.** Devices enrolled in MDM can block personal Apple ID authentication - the native app simply refuses to sign in. Sidra authenticates at the application layer, a glorified browser session, so MDM policy never sees it. Then there is the more relatable problem: a friend's daughter was steadily polluting his Apple Music recommendations with K-pop. Sidra installed alongside the native app gives her a fully isolated session - her listening history, her "For You" shelf, her algorithmic rabbit holes. His recommendations are his own again.
 
-**Windows followed** at the request of another friend who wanted a decent Apple Music client that was not Cider.
+**Windows followed** at the request of another friend who wanted a decent Classical-focused Apple Music client that was not Cider.
 
-The bonus became clear once everything was working. Wrapping `music.apple.com` directly means none of those failure modes can exist. Apple's audio pipeline, Apple's auth, Apple's UI - Sidra never creates an `AudioContext`. Audio flows untouched through Chromium's media stack to the OS. Authentication cannot drift out of sync with Apple's servers. The interface updates whenever Apple ships a change, automatically.
+The bonus became clear once everything was working. Wrapping Apple's own web player directly means none of those failure modes can exist. Apple's audio pipeline, Apple's auth, Apple's UI - Sidra never creates an `AudioContext`. Audio flows untouched through Chromium's media stack to the OS. Authentication cannot drift out of sync with Apple's servers. The interface updates whenever Apple ships a change, automatically.
 
 *Sidra* is the Spanish word for the traditional dry cider of Asturias in northern Spain - poured from height, unfiltered, drunk before it goes flat. The name came from a trip to the region for UbuCon Europe 2018. No additives, no artifice, nothing between the apple and the glass.
 

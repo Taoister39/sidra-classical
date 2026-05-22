@@ -9,7 +9,7 @@ vi.mock('../src/config', () => ({
   setDiscordEnabled: vi.fn(),
   getTheme: () => 'apple-music',
   setTheme: vi.fn(),
-  getStartPage: () => 'new',
+  getStartPage: () => 'home',
   setStartPage: vi.fn(),
   getZoomFactor: () => 1.0,
   setZoomFactor: vi.fn(),
@@ -22,9 +22,10 @@ const mockTrayStrings: TrayStrings = {
   discord: 'Discord',
   startPage: 'Start Page',
   startPageHome: 'Home',
-  startPageNew: 'New',
-  startPageRadio: 'Radio',
-  startPageAllPlaylists: 'All Playlists',
+  startPageBrowse: 'Browse',
+  startPageLibrary: 'Library',
+  startPagePlaylists: 'Playlists',
+  startPageSearch: 'Search',
   startPageLast: 'Last',
   catppuccin: 'Catppuccin',
   on: 'On',
@@ -70,7 +71,7 @@ vi.mock('../src/artwork', () => ({
 
 vi.mock('../src/paths', () => ({
   getAssetPath: vi.fn((...parts: string[]) => parts.join('/')),
-  getProductInfo: () => ({ productName: 'Sidra', description: 'Apple Music client', author: 'Test', license: 'MIT' }),
+  getProductInfo: () => ({ productName: 'Sidra', description: 'Apple Music Classical client', author: 'Test', license: 'MIT' }),
 }));
 
 import { Menu, Tray, nativeImage, nativeTheme } from 'electron';
@@ -90,6 +91,14 @@ function getLastTemplate(): Electron.MenuItemConstructorOptions[] {
 // Helper: find a menu item by label substring
 function findItem(template: Electron.MenuItemConstructorOptions[], labelSubstring: string): Electron.MenuItemConstructorOptions | undefined {
   return template.find((item) => typeof item.label === 'string' && item.label.includes(labelSubstring));
+}
+
+function expectCreateFromPathContaining(fragment: string): void {
+  const calls = vi.mocked(nativeImage.createFromPath).mock.calls;
+  expect(
+    calls.some(([imagePath]) => imagePath.replace(/\\/g, '/').includes(fragment)),
+    `expected createFromPath to be called with a path containing ${fragment}`,
+  ).toBe(true);
 }
 
 describe('truncateMenuLabel', () => {
@@ -215,7 +224,7 @@ describe('createTray - menu template inspection', () => {
       createTray();
       const template = getLastTemplate();
       const startPageItem = findItem(template, 'Start Page');
-      expect(startPageItem!.label).toBe('Start Page: New');
+      expect(startPageItem!.label).toBe('Start Page: Home');
     });
 
     it('does not attach icons to submenu radio items', () => {
@@ -833,18 +842,14 @@ describe('getMenuIcon', () => {
       Object.defineProperty(nativeTheme, 'shouldUseDarkColors', { value: true, configurable: true });
       const icon = getMenuIcon('about');
       expect(icon).toBeDefined();
-      expect(vi.mocked(nativeImage.createFromPath)).toHaveBeenCalledWith(
-        expect.stringContaining('tray/menu/dark/circle-info.png')
-      );
+      expectCreateFromPathContaining('tray/menu/dark/circle-info.png');
     });
 
     it('returns a NativeImage from the light PNG directory when shouldUseDarkColors is false', () => {
       Object.defineProperty(nativeTheme, 'shouldUseDarkColors', { value: false, configurable: true });
       const icon = getMenuIcon('quit');
       expect(icon).toBeDefined();
-      expect(vi.mocked(nativeImage.createFromPath)).toHaveBeenCalledWith(
-        expect.stringContaining('tray/menu/light/eject.png')
-      );
+      expectCreateFromPathContaining('tray/menu/light/eject.png');
     });
 
     it('returns undefined for an unknown action', () => {
@@ -869,9 +874,7 @@ describe('getMenuIcon', () => {
     it('returns a NativeImage from the dark PNG directory', () => {
       const icon = getMenuIcon('play');
       expect(icon).toBeDefined();
-      expect(vi.mocked(nativeImage.createFromPath)).toHaveBeenCalledWith(
-        expect.stringContaining('tray/menu/dark/play.png')
-      );
+      expectCreateFromPathContaining('tray/menu/dark/play.png');
     });
   });
 

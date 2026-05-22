@@ -52,11 +52,11 @@ vi.mock('../src/config', async () => {
     },
     setLastPageUrl: (url: string): void => { data.set('lastPageUrl', url); },
 
-    getStartPage: (): 'home' | 'new' | 'radio' | 'all-playlists' | 'last' => {
-      if (!data.has('startPage')) return 'new';
-      return data.get('startPage') as 'home' | 'new' | 'radio' | 'all-playlists' | 'last';
+    getStartPage: (): 'home' | 'browse' | 'library' | 'playlists' | 'search' | 'last' => {
+      if (!data.has('startPage')) return 'home';
+      return data.get('startPage') as 'home' | 'browse' | 'library' | 'playlists' | 'search' | 'last';
     },
-    setStartPage: (page: 'home' | 'new' | 'radio' | 'all-playlists' | 'last'): void => { data.set('startPage', page); },
+    setStartPage: (page: 'home' | 'browse' | 'library' | 'playlists' | 'search' | 'last'): void => { data.set('startPage', page); },
 
     getZoomFactor: (): number => {
       if (!data.has('zoomFactor')) return 1.0;
@@ -79,6 +79,7 @@ import {
 } from '../src/config';
 
 import type { ThemeName } from '../src/theme';
+import type { StartPage } from '../src/config';
 
 // Type assertions verify that each getter return type matches its StoreSchema key type.
 // These are compile-time checks via expectTypeOf.
@@ -141,11 +142,11 @@ describe('Config store type assertions', () => {
   });
 
   it('getStartPage returns start page union', () => {
-    expectTypeOf(getStartPage).returns.toEqualTypeOf<'home' | 'new' | 'radio' | 'all-playlists' | 'last'>();
+    expectTypeOf(getStartPage).returns.toEqualTypeOf<StartPage>();
   });
 
   it('setStartPage accepts start page union', () => {
-    expectTypeOf(setStartPage).parameter(0).toEqualTypeOf<'home' | 'new' | 'radio' | 'all-playlists' | 'last'>();
+    expectTypeOf(setStartPage).parameter(0).toEqualTypeOf<StartPage>();
   });
 
   it('getZoomFactor returns number', () => {
@@ -187,8 +188,8 @@ describe('Config store runtime behaviour', () => {
     expect(getAutoUpdateEnabled()).toBe(true);
   });
 
-  it('getStartPage defaults to new', () => {
-    expect(getStartPage()).toBe('new');
+  it('getStartPage defaults to home', () => {
+    expect(getStartPage()).toBe('home');
   });
 
   it('getZoomFactor defaults to 1.0', () => {

@@ -4,7 +4,7 @@ import log from 'electron-log/main';
 import { getTrayStrings, getUpdateStrings, getAutoUpdateStrings, type TrayStrings } from './i18n';
 import { getAssetPath, getProductInfo } from './paths';
 import { Player, PlaybackState, getShareUrl, type NowPlayingPayload } from './player';
-import { getNotificationsEnabled, setNotificationsEnabled, getDiscordEnabled, setDiscordEnabled, getTheme, setTheme, getStartPage, setStartPage, getZoomFactor, setZoomFactor } from './config';
+import { getNotificationsEnabled, setNotificationsEnabled, getDiscordEnabled, setDiscordEnabled, getTheme, setTheme, getStartPage, setStartPage, getZoomFactor, setZoomFactor, type StartPage } from './config';
 import { showAboutWindow } from './aboutWindow';
 import { getUpdateInfo } from './update';
 import { quitAndInstall } from './autoUpdate';
@@ -155,11 +155,12 @@ interface SubmenuContext {
 function buildStartPageSubmenu(ctx: SubmenuContext): Electron.MenuItemConstructorOptions {
   const { strings, refresh } = ctx;
   const currentStartPage = getStartPage();
-  const startPageLabelMap: Record<string, string> = {
+  const startPageLabelMap: Record<StartPage, string> = {
     'home': strings.startPageHome,
-    'new': strings.startPageNew,
-    'radio': strings.startPageRadio,
-    'all-playlists': strings.startPageAllPlaylists,
+    'browse': strings.startPageBrowse,
+    'library': strings.startPageLibrary,
+    'playlists': strings.startPagePlaylists,
+    'search': strings.startPageSearch,
     'last': strings.startPageLast,
   };
   const parentLabel = `${strings.startPage}: ${startPageLabelMap[currentStartPage]}`;
@@ -175,22 +176,28 @@ function buildStartPageSubmenu(ctx: SubmenuContext): Electron.MenuItemConstructo
         click: () => { setStartPage('home'); refresh(); },
       },
       {
-        label: strings.startPageNew,
+        label: strings.startPageBrowse,
         type: 'radio',
-        checked: currentStartPage === 'new',
-        click: () => { setStartPage('new'); refresh(); },
+        checked: currentStartPage === 'browse',
+        click: () => { setStartPage('browse'); refresh(); },
       },
       {
-        label: strings.startPageRadio,
+        label: strings.startPageLibrary,
         type: 'radio',
-        checked: currentStartPage === 'radio',
-        click: () => { setStartPage('radio'); refresh(); },
+        checked: currentStartPage === 'library',
+        click: () => { setStartPage('library'); refresh(); },
       },
       {
-        label: strings.startPageAllPlaylists,
+        label: strings.startPagePlaylists,
         type: 'radio',
-        checked: currentStartPage === 'all-playlists',
-        click: () => { setStartPage('all-playlists'); refresh(); },
+        checked: currentStartPage === 'playlists',
+        click: () => { setStartPage('playlists'); refresh(); },
+      },
+      {
+        label: strings.startPageSearch,
+        type: 'radio',
+        checked: currentStartPage === 'search',
+        click: () => { setStartPage('search'); refresh(); },
       },
       {
         label: strings.startPageLast,

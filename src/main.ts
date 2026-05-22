@@ -6,7 +6,7 @@ import { getTheme, setLastPageUrl, getZoomFactor } from './config';
 import { getLoadingText } from './i18n';
 import { getAssetPath } from './paths';
 import { Player, IntegrationContext } from './player';
-import { buildAppleMusicURL, buildItmsRouteURL, handleStorefrontNavigation } from './storefront';
+import { buildAppleMusicClassicalURL, buildItmsRouteURL, handleStorefrontNavigation } from './storefront';
 import { extractItmsUrlFromArgv, type ItmsTarget } from './itms';
 import { initThemeCSS, setThemeCssKey } from './theme';
 import { createTray, getMenuIcon, initTrayStateManager, rebuildTrayMenu, setApplyZoomCallback, setSendCommandCallback } from './tray';
@@ -20,6 +20,7 @@ import { init as initWindowsTaskbar, setTaskbarSendCommandCallback } from './int
 import { cleanArtworkCache } from './artwork';
 import { init as initWedgeDetector, reset as resetWedgeDetector } from './wedgeDetector';
 import { contentReadyProbeScript } from './contentReady';
+import { APPLE_MUSIC_CLASSICAL_HOST, APPLE_MUSIC_CLASSICAL_NAME, APPLE_MUSIC_CLASSICAL_ORIGIN } from './musicService';
 
 const SPLASH_MIN_DISPLAY_MS = 500;
 const CONTENT_READY_POLL_MS = 100;
@@ -70,7 +71,7 @@ if (process.platform === 'linux') {
 if (process.platform === 'darwin') process.env.TMPDIR = app.getPath('temp');
 
 // Use a platform-accurate Chrome UA, stripping Electron identifiers that
-// Apple Music detects and blocks. The platform component must be truthful
+// Apple's web players detect and block. The platform component must be truthful
 // to match Sec-CH-UA-Platform Client Hints sent on every request.
 // Chrome version 144.0.0.0 matches the Chromium build in CastLabs ECS v40.7.0+wvcus.
 function chromeUA(): string {
@@ -97,18 +98,16 @@ let appTray: Tray | null = null;
 // access the main window without threading it through closures.
 let win: BrowserWindow | null = null;
 
-// Single-instance lock: forward subsequent launches to the running instance so
-// itms:// URLs from a second invocation are routed instead of opening a new
-// window. macOS uses LSOpenURLSpec (open-url event) and never spawns a second
-// process, so the lock is unnecessary there.
+// Single-instance lock: subsequent launches focus the running instance and can
+// route any supported deep-link URL supplied on argv instead of opening a new
+// window. macOS uses LSOpenURLSpec for registered URL schemes and never spawns
+// a second process, so the lock is unnecessary there.
 const gotLock = process.platform === 'darwin' || app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 }
 
-// Capture any itms:// argument from initial launch argv. macOS delivers URLs
-// via the open-url event, not argv, and itms:// is not registered there
-// (Music.app handles it natively).
+// Capture any supported deep-link argument from initial launch argv.
 let pendingItmsTarget: ItmsTarget | null =
   process.platform !== 'darwin' ? extractItmsUrlFromArgv(process.argv) : null;
 
@@ -222,7 +221,7 @@ async function initSession(): Promise<Electron.Session> {
     components.whenReady(),
     ses.clearData({
       dataTypes: ['serviceWorkers', 'cache'],
-      origins: ['https://music.apple.com'],
+      origins: [APPLE_MUSIC_CLASSICAL_ORIGIN],
     }),
   ]);
   interface CdmComponentStatus {
@@ -307,7 +306,7 @@ function setupSessionHeaders(ses: Electron.Session): void {
   ses.setUserAgent(UA);
 
   // Strip Electron and app name tokens from outgoing request headers
-  ses.webRequest.onBeforeSendHeaders({ urls: ['https://music.apple.com/*'] }, (details, callback) => {
+  ses.webRequest.onBeforeSendHeaders({ urls: [`${APPLE_MUSIC_CLASSICAL_ORIGIN}/*`] }, (details, callback) => {
     const ua = details.requestHeaders['User-Agent'];
     if (ua && ua !== UA) {
       details.requestHeaders['User-Agent'] = UA;
@@ -342,7 +341,7 @@ function setupNavigationHandlers(win: BrowserWindow, navBarScript: string, hookS
     handleStorefrontNavigation(url);
     try {
       const parsed = new URL(url);
-      if (parsed.hostname === 'music.apple.com') {
+      if (parsed.hostname === APPLE_MUSIC_CLASSICAL_HOST) {
         const segments = parsed.pathname.split('/').filter(Boolean);
         const pageSegments = segments[0] && /^[a-z]{2}$/.test(segments[0]) ? segments.slice(1) : segments;
         if (pageSegments.length > 0) setLastPageUrl(pageSegments.join('/'));
@@ -371,7 +370,7 @@ function setupWindowEvents(win: BrowserWindow, markCssReady: () => void): void {
 
   // A single did-fail-load handler covers both error logging and splash
   // dismissal. The first-fire markCssReady() call prevents the splash screen
-  // from hanging indefinitely when Apple Music fails to load.
+  // from hanging indefinitely when Apple Music Classical fails to load.
   let cssMarked = false;
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     if (!cssMarked) {
@@ -472,12 +471,6 @@ if (gotLock) {
     const ses = await initSession();
     cleanArtworkCache();
 
-    if (process.platform === 'linux' || process.platform === 'win32') {
-      const ok = app.setAsDefaultProtocolClient('itms');
-      mainLog.info(`itms protocol registration: ${ok ? 'ok' : 'failed'}`);
-    }
-    // macOS open-url intentionally omitted - Music.app handles itms:// natively.
-
     const assets = loadAssets();
     const created = createMainWindow(ses);
     win = created.win;
@@ -496,8 +489,8 @@ if (gotLock) {
       win.webContents.openDevTools();
       mainLog.info('DevTools opened (SIDRA_DEVTOOLS=1)');
     }
-    mainLog.info('loading Apple Music...');
-    win.loadURL(buildAppleMusicURL(), { userAgent: UA });
+    mainLog.info(`loading ${APPLE_MUSIC_CLASSICAL_NAME}...`);
+    win.loadURL(buildAppleMusicClassicalURL(), { userAgent: UA });
 
     // Drain any itms target captured at launch. Routed after the initial home
     // load so the content-ready probe binds to its first did-navigate-in-page.

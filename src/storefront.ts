@@ -2,17 +2,18 @@ import log from 'electron-log/main';
 import { getStorefront, setStorefront, getLanguage, setLanguage, getStartPage, getLastPageUrl } from './config';
 import { getStorefront as getLocaleStorefront } from './i18n';
 import type { ItmsRouteToken } from './itms';
+import { APPLE_MUSIC_CLASSICAL_HOST, APPLE_MUSIC_CLASSICAL_ORIGIN } from './musicService';
 
 export type { ItmsRouteToken } from './itms';
 
 const storefrontLog = log.scope('storefront');
 
 const ITMS_ROUTE_PATHS: Record<ItmsRouteToken, string> = {
+  home: '',
   library: 'library',
   browse: 'browse',
-  radio: 'radio',
-  listenNow: 'listen-now',
-  subscribe: 'subscribe',
+  playlists: 'browse/playlists',
+  search: 'search',
 };
 
 function appendLanguage(url: string, language: string | null | undefined): string {
@@ -22,7 +23,12 @@ function appendLanguage(url: string, language: string | null | undefined): strin
   return url;
 }
 
-export function buildAppleMusicURL(): string {
+function buildClassicalStorefrontURL(storefront: string, path: string, language: string | null | undefined): string {
+  const base = `${APPLE_MUSIC_CLASSICAL_ORIGIN}/${storefront}`;
+  return appendLanguage(path ? `${base}/${path}` : base, language);
+}
+
+export function buildAppleMusicClassicalURL(): string {
   let storefront = getStorefront();
   let source: string;
 
@@ -41,20 +47,21 @@ export function buildAppleMusicURL(): string {
   if (startPage === 'last') {
     const lastPath = getLastPageUrl();
     if (lastPath) {
-      return appendLanguage(`https://music.apple.com/${storefront}/${lastPath}`, language);
+      return buildClassicalStorefrontURL(storefront, lastPath, language);
     }
-    // fall through: no stored path yet, use 'new'
+    // fall through: no stored path yet, use Home
   }
 
   const pagePathMap: Record<string, string> = {
-    'home': 'home',
-    'new': 'new',
-    'radio': 'radio',
-    'all-playlists': 'library/all-playlists/',
+    'home': '',
+    'browse': 'browse',
+    'library': 'library',
+    'playlists': 'browse/playlists',
+    'search': 'search',
   };
-  const pagePath = pagePathMap[startPage] ?? pagePathMap['new'];
+  const pagePath = pagePathMap[startPage] ?? pagePathMap['home'];
 
-  return appendLanguage(`https://music.apple.com/${storefront}/${pagePath}`, language);
+  return buildClassicalStorefrontURL(storefront, pagePath, language);
 }
 
 export function buildItmsRouteURL(token: ItmsRouteToken): string {
@@ -64,13 +71,13 @@ export function buildItmsRouteURL(token: ItmsRouteToken): string {
   }
   const language = getLanguage();
   const path = ITMS_ROUTE_PATHS[token];
-  return appendLanguage(`https://music.apple.com/${storefront}/${path}`, language);
+  return buildClassicalStorefrontURL(storefront, path, language);
 }
 
 export function extractStorefrontFromURL(url: string): { storefront: string; language: string | null } | null {
   try {
     const parsed = new URL(url);
-    if (parsed.hostname !== 'music.apple.com') {
+    if (parsed.hostname !== APPLE_MUSIC_CLASSICAL_HOST) {
       return null;
     }
     const segments = parsed.pathname.split('/').filter(Boolean);

@@ -109,7 +109,7 @@
         lastVolume = mk.volume;
         window.AMWrapper.ipcRenderer.send('volumeDidChange', mk.volume);
       });
-      // Poll mk.volume every 250ms as a fallback - the music.apple.com volume
+      // Poll mk.volume every 250ms as a fallback - Apple's web volume
       // slider writes directly to HTMLMediaElement.volume, bypassing MusicKit's
       // setter and its volumeDidChange event.
       volumePollTimer = setInterval(() => {
